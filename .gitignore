@@ -29,7 +29,7 @@ replay_pid*.log
 Thumbs.db
 
 # Secrets / env (keep *.example tracked)
-.env
+# .env
 .env.local
 .env.*.local
 .envrc
