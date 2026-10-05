@@ -1,0 +1,14 @@
+pipeline{
+    agent any
+
+    stages{
+
+        stage("Checkout"){
+            steps{
+                echo "This is checkout phase"
+                checkout scm
+                echo "Checkout completed"
+            }
+        }
+    }
+}
