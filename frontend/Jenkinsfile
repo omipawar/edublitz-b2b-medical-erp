@@ -1,11 +1,22 @@
 pipeline{
     agent any
 
+    tools{
+        nodejs 'node-22'
+    }
+
     stages{
 
         stage("Checkout"){
             steps{
                 echo "Checkout phase completed"
+            }
+        }
+
+        stage("Node-check"){
+            steps{
+                sh 'node --version'
+                sh 'npm --version'
             }
         }
     }
