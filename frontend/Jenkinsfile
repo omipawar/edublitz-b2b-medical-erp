@@ -13,17 +13,48 @@ pipeline{
             }
         }
 
+        stage('Create Environment') {
+            steps {
+                dir('frontend') {
+                    sh '''
+                        USER_SERVICE_URL=$(aws ssm get-parameter \
+                            --name "VITE_USER_SERVICE_URL" \
+                            --query "Parameter.Value" \
+                            --output text)
+
+                        PRODUCT_SERVICE_URL=$(aws ssm get-parameter \
+                            --name "VITE_PRODUCT_SERVICE_URL" \
+                            --query "Parameter.Value" \
+                            --output text)
+
+                        ORDER_SERVICE_URL=$(aws ssm get-parameter \
+                            --name "VITE_ORDER_SERVICE_URL" \
+                            --query "Parameter.Value" \
+                            --output text)
+
+                        cat > .env <<EOF
+VITE_USER_SERVICE_URL=$USER_SERVICE_URL
+VITE_PRODUCT_SERVICE_URL=$PRODUCT_SERVICE_URL
+VITE_ORDER_SERVICE_URL=$ORDER_SERVICE_URL
+EOF
+
+                        echo ".env created successfully"
+                    '''
+                }
+            }
+        }
+
         stage("Build"){
             when{
                 changeset "frontend/**"
             }
             steps{
                 dir('frontend'){
-                    sh 'npm install'
+                    sh 'npm ci'
                     sh 'npm run build'
                 }
             }
         }
-        
+
     }
 }
