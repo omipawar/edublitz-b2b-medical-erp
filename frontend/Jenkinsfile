@@ -50,8 +50,8 @@ EOF
             }
             steps{
                 dir('frontend'){
-                    echo 'npm --version'
-                    echo 'node --version'
+                    sh 'npm --version'
+                    sh 'node --version'
                     sh 'npm ci'
                     sh 'npm run build'
                 }
