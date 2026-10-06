@@ -13,10 +13,15 @@ pipeline{
             }
         }
 
-        stage("Node-check"){
+        stage("Build"){
+            when{
+                changeset "frontend/**"
+            }
             steps{
-                sh 'node --version'
-                sh 'npm --version'
+                dir('frontend'){
+                    sh 'npm install'
+                    sh 'npm run build'
+                }
             }
         }
     }
