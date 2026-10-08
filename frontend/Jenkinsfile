@@ -58,5 +58,31 @@ EOF
             }
         }
 
+        stage("Deploy-To-S3"){
+            when{
+                changeset "frontend/**"
+            }
+            steps{
+                dir('frontend'){
+                    sh '''
+                        aws s3 sync dist/ s3://omipawar097-erp-frontend/ --delete
+                    '''
+                }
+            }
+        }
+
+    }
+    post {
+        always {
+            echo "🔄 Pipeline execution completed"
+        }
+
+        success {
+            echo "✅ Deployment successful"
+        }
+
+        failure {
+            echo "❌ Deployment failed"
+        }
     }
 }
