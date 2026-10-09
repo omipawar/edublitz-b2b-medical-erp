@@ -1,0 +1,87 @@
+pipeline{
+    agent any
+
+    stages{
+
+        stage("Checkout"){
+            steps{
+                echo "📥 Terraform repository checkout completed"
+            }
+        }
+
+        stage("Init"){
+            when{
+                changeset "infrastructure/**"
+            }
+            steps{
+                dir('infrastructure/s3-frontend'){
+                    sh "terraform --version"
+                    sh "terraform init"
+                    sh "terraform fmt -check -recursive"
+                }
+            }
+        }
+
+        stage("Validate"){
+            when{
+                changeset "infrastructure/**"
+            }
+            steps{
+                dir('infrastructure/s3-frontend'){
+                    sh "terraform validate"
+                }
+            }
+        }
+
+        stage("Plan"){
+            when{
+                changeset "infrastructure/**"
+            }
+            steps{
+                dir('infrastructure/s3-frontend'){
+                    sh "terraform plan -out=tfplan"
+                }
+            }
+        }
+
+        stage("Approval") {
+            when {
+                changeset "infrastructure/**"
+            }
+            steps {
+                script {
+                    input(
+                        message: 'Review the Terraform plan. Do you want to apply these infrastructure changes?',
+                        ok: 'Approve and Apply',
+                        submitter: 'admin'
+                    )
+                }
+            }
+        }
+
+        stage("Apply"){
+            when{
+                changeset "infrastructure/**"
+            }
+            steps{
+                dir('infrastructure/s3-frontend'){
+                    sh "terraform apply --auto-approve tfplan"
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "🔄 Pipeline execution completed"
+        }
+
+        success {
+            echo "✅ Infra created successful"
+        }
+
+        failure {
+            echo "❌ Failed to create Infra"
+        }
+    }
+}
