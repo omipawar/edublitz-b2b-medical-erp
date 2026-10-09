@@ -73,15 +73,15 @@ pipeline{
 
     post {
         always {
-            echo "🔄 Pipeline execution completed"
+            echo "🔄 Pipeline execution completed!"
         }
 
         success {
-            echo "✅ Infra created successful"
+            echo "✅ Infra created successful!"
         }
 
         failure {
-            echo "❌ Failed to create Infra"
+            echo "❌ Failed to create Infra!"
         }
     }
 }
