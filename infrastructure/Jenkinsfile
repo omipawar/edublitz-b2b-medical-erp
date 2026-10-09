@@ -10,9 +10,9 @@ pipeline{
         }
 
         stage("Init"){
-            when{
-                changeset "infrastructure/**"
-            }
+            // when{
+            //     changeset "infrastructure/**"
+            // }
             steps{
                 dir('infrastructure/s3-frontend'){
                     sh "terraform --version"
@@ -23,9 +23,9 @@ pipeline{
         }
 
         stage("Validate"){
-            when{
-                changeset "infrastructure/**"
-            }
+            // when{
+            //     changeset "infrastructure/**"
+            // }
             steps{
                 dir('infrastructure/s3-frontend'){
                     sh "terraform validate"
@@ -34,9 +34,9 @@ pipeline{
         }
 
         stage("Plan"){
-            when{
-                changeset "infrastructure/**"
-            }
+            // when{
+            //     changeset "infrastructure/**"
+            // }
             steps{
                 dir('infrastructure/s3-frontend'){
                     sh "terraform plan -out=tfplan"
@@ -45,9 +45,9 @@ pipeline{
         }
 
         stage("Approval") {
-            when {
-                changeset "infrastructure/**"
-            }
+            // when {
+            //     changeset "infrastructure/**"
+            // }
             steps {
                 script {
                     input(
@@ -60,9 +60,9 @@ pipeline{
         }
 
         stage("Apply"){
-            when{
-                changeset "infrastructure/**"
-            }
+            // when{
+            //     changeset "infrastructure/**"
+            // }
             steps{
                 dir('infrastructure/s3-frontend'){
                     sh "terraform apply --auto-approve tfplan"
@@ -73,15 +73,15 @@ pipeline{
 
     post {
         always {
-            echo "🔄 Pipeline execution completed!"
+            echo "🔄 Pipeline execution completed"
         }
 
         success {
-            echo "✅ Infra created successful!"
+            echo "✅ Infra created successful"
         }
 
         failure {
-            echo "❌ Failed to create Infra!"
+            echo "❌ Failed to create Infra"
         }
     }
 }
