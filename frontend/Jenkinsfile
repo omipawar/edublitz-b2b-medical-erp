@@ -45,9 +45,9 @@ EOF
         }
 
         stage("Build"){
-            when{
-                changeset "frontend/**"
-            }
+            // when{
+            //     changeset "frontend/**"
+            // }
             steps{
                 dir('frontend'){
                     sh 'npm --version'
@@ -59,9 +59,9 @@ EOF
         }
 
         stage("Deploy-To-S3"){
-            when{
-                changeset "frontend/**"
-            }
+            // when{
+            //     changeset "frontend/**"
+            // }
             steps{
                 dir('frontend'){
                     sh '''
