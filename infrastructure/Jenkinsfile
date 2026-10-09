@@ -68,6 +68,8 @@ pipeline{
                     sh "terraform apply --auto-approve tfplan"
                 }
             }
+            build job: 'mederp-fronend',
+              wait: false
         }
     }
 
