@@ -1,11 +1,11 @@
-resource "aws_s3_bucket" "frontend"{
-    bucket = var.bucket_name
+resource "aws_s3_bucket" "frontend" {
+  bucket = var.bucket_name
 
-    tags = {
-        Name = var.bucket_name
-        Environment = var.environment
-        ManagedBy = "Terraform"
-    }
+  tags = {
+    Name        = var.bucket_name
+    Environment = var.environment
+    ManagedBy   = "Terraform"
+  }
 }
 
 # Allow the bucket policy to grant public read access
