@@ -59,17 +59,19 @@ pipeline{
             }
         }
 
-        stage("Apply"){
-            // when{
+        stage("Apply") {
+            // when {
             //     changeset "infrastructure/**"
             // }
-            steps{
-                dir('infrastructure/s3-frontend'){
-                    sh "terraform apply --auto-approve tfplan"
+
+            steps {
+                dir('infrastructure/s3-frontend') {
+                    sh 'terraform apply -auto-approve tfplan'
                 }
+
+                build job: 'mederp-fronend',
+                    wait: false
             }
-            build job: 'mederp-fronend',
-              wait: false
         }
     }
 
