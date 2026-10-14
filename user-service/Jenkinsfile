@@ -5,6 +5,12 @@ pipeline{
         jdk 'jdk-17'
     }
 
+    environment {
+        AWS_ACCOUNT_ID = '581237506066'
+        AWS_REGION = 'ap-south-1'
+        ECR_REPOSITORY = 'med-erp/user-service'
+    }
+
     stages{
 
         stage("Checkout"){
@@ -14,6 +20,15 @@ pipeline{
                     javac -version
                 '''
                 echo "Checkout phase completed"
+            }
+        }
+
+        stage("Docker-Build"){
+            steps{
+                dir('user-service'){
+                    echo "Jenkins Build Number: ${BUILD_NUMBER}"
+                     sh "docker build -t ${AWS_ACCOUNT_ID}.dkr.ecr.ap-south-1.amazonaws.com/med-erp/user-service:${BUILD_NUMBER} ."
+                }
             }
         }
     }
