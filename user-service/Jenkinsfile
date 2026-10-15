@@ -4,7 +4,6 @@ pipeline{
     tools{
         jdk 'jdk-17'
         maven 'maven-3.9'
-        sonarQubeScanner 'sonar-scanner'
     }
 
     environment {
@@ -31,9 +30,10 @@ pipeline{
         stage("SonarQube Analysis") {
             steps {
                 dir('user-service') {
+                    def scannerHome = tool 'sonar-scanner'
                     withSonarQubeEnv('SonarQube') {
                         sh '''
-                            sonar-scanner \
+                            "\${scannerHome}/bin/sonar-scanner" \
                             -Dsonar.projectKey=med-erp-user-service \
                             -Dsonar.projectName="med-erp/user-service" \
                             -Dsonar.sources=src
