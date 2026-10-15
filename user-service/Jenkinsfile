@@ -47,9 +47,13 @@ pipeline{
         //     }
         // }
 
-        dir('user-service') {
-            withSonarQubeEnv('SonarQube') {
-                sh 'mvn -B clean verify sonar:sonar -Dsonar.projectKey=med-erp-user-service -Dsonar.projectName=med-erp/user-service'
+        stage('SonarQube Analysis') {
+            steps {
+                dir('user-service') {
+                    withSonarQubeEnv('SonarQube') {
+                        sh 'mvn -B clean verify sonar:sonar -Dsonar.projectKey=med-erp-user-service -Dsonar.projectName=med-erp/user-service'
+                    }
+                }
             }
         }
 
