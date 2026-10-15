@@ -31,7 +31,7 @@ pipeline{
             steps{
                 dir('user-service'){
                     echo "Jenkins Build Number: ${BUILD_NUMBER}"
-                     sh "docker build -t ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/med-erp/user-service:${BUILD_NUMBER} ."
+                     sh "docker build -t ${ECR_REGISTRY}/med-erp/user-service:${BUILD_NUMBER} ."
                 }
             }
         }
