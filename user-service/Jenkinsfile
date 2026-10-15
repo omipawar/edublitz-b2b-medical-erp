@@ -4,6 +4,7 @@ pipeline{
     tools{
         jdk 'jdk-17'
         maven 'maven-3.9'
+        sonarQubeScanner 'sonar-scanner'
     }
 
     environment {
@@ -32,9 +33,10 @@ pipeline{
                 dir('user-service') {
                     withSonarQubeEnv('SonarQube') {
                         sh '''
-                                mvn -B clean verify -DskipTests sonar:sonar \
-                                -Dsonar.projectKey=med-erp-user-service \
-                                -Dsonar.projectName="med-erp/user-service"
+                            sonar-scanner \
+                            -Dsonar.projectKey=med-erp-user-service \
+                            -Dsonar.projectName="med-erp/user-service" \
+                            -Dsonar.sources=src
                         '''
                     }
                 }
@@ -83,7 +85,7 @@ pipeline{
             }
         }
     }
-
+    
     post {
         always {
             echo "🔄 Pipeline execution completed"
