@@ -27,6 +27,36 @@ pipeline{
             }
         }
 
+        stage("SonarQube Analysis") {
+            steps {
+                dir('user-service') {
+                    withSonarQubeEnv('SonarQube') {
+                        sh '''
+                            mvn -B clean verify sonar:sonar \
+                              -Dsonar.projectKey=med-erp-user-service \
+                              -Dsonar.projectName="med-erp/user-service"
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage("Quality Gate") {
+            steps {
+                timeout(time: 5, unit: 'MINUTES') {
+                    script {
+                        def qg = waitForQualityGate()
+
+                        if (qg.status != 'OK') {
+                            error "Pipeline stopped: Quality Gate status: ${qg.status}"
+                        }
+
+                        echo "SonarQube Quality Gate passed"
+                    }
+                }
+            }
+        }
+
         stage("Docker-Build"){
             steps{
                 dir('user-service'){
@@ -51,6 +81,20 @@ pipeline{
                     docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
                 '''
             }
+        }
+    }
+    
+    post {
+        always {
+            echo "🔄 Pipeline execution completed"
+        }
+
+        success {
+            echo "✅ Deployment successful"
+        }
+
+        failure {
+            echo "❌ Deployment failed"
         }
     }
 }
