@@ -27,23 +27,29 @@ pipeline{
             }
         }
 
-        stage('SonarQube Analysis') {
-            steps {
-                script {
-                    def scannerHome = tool name: 'sonar-scanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
-                    echo "SonarScanner installation path: ${scannerHome}"
-                    dir('user-service') {
-                        withSonarQubeEnv('SonarQube') {
-                            sh """
-                                ${scannerHome}/bin/sonar-scanner \
-                                -Dsonar.projectKey=med-erp-user-service \
-                                -Dsonar.projectName=med-erp/user-service \
-                                -Dsonar.sources=src \
-                                -Dsonar.java.binaries=target/classes
-                            """
-                        }
-                    }
-                }
+        // stage('SonarQube Analysis') {
+        //     steps {
+        //         script {
+        //             def scannerHome = tool name: 'sonar-scanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
+        //             echo "SonarScanner installation path: ${scannerHome}"
+        //             dir('user-service') {
+        //                 withSonarQubeEnv('SonarQube') {
+        //                     sh """
+        //                         ${scannerHome}/bin/sonar-scanner \
+        //                         -Dsonar.projectKey=med-erp-user-service \
+        //                         -Dsonar.projectName=med-erp/user-service \
+        //                         -Dsonar.sources=src \
+        //                         -Dsonar.java.binaries=target/classes
+        //                     """
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+
+        dir('user-service') {
+            withSonarQubeEnv('SonarQube') {
+                sh 'mvn -B clean verify sonar:sonar -Dsonar.projectKey=med-erp-user-service -Dsonar.projectName=med-erp/user-service'
             }
         }
 
