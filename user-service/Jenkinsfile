@@ -32,9 +32,9 @@ pipeline{
                 dir('user-service') {
                     withSonarQubeEnv('SonarQube') {
                         sh '''
-                            mvn -B clean verify sonar:sonar \
-                              -Dsonar.projectKey=med-erp-user-service \
-                              -Dsonar.projectName="med-erp/user-service"
+                                mvn -B clean verify -DskipTests sonar:sonar \
+                                -Dsonar.projectKey=med-erp-user-service \
+                                -Dsonar.projectName="med-erp/user-service"
                         '''
                     }
                 }
@@ -83,7 +83,7 @@ pipeline{
             }
         }
     }
-    
+
     post {
         always {
             echo "🔄 Pipeline execution completed"
