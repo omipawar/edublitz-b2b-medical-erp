@@ -27,17 +27,20 @@ pipeline{
             }
         }
 
-        stage("SonarQube Analysis") {
+        stage('SonarQube Analysis') {
             steps {
-                dir('user-service') {
+                script {
                     def scannerHome = tool 'sonar-scanner'
-                    withSonarQubeEnv('SonarQube') {
-                        sh '''
-                            "\${scannerHome}/bin/sonar-scanner" \
-                            -Dsonar.projectKey=med-erp-user-service \
-                            -Dsonar.projectName="med-erp/user-service" \
-                            -Dsonar.sources=src
-                        '''
+
+                    dir('user-service') {
+                        withSonarQubeEnv('SonarQube') {
+                            sh """
+                                "\${scannerHome}/bin/sonar-scanner" \
+                                -Dsonar.projectKey=med-erp-user-service \
+                                -Dsonar.projectName="med-erp/user-service" \
+                                -Dsonar.sources=src
+                            """
+                        }
                     }
                 }
             }
