@@ -1,0 +1,225 @@
+pipeline{
+    agent any
+
+    tools{
+        jdk 'jdk-17'
+        maven 'maven-3.9'
+    }
+
+    options {
+        // Retain the latest 10 builds and up to 5 artifact sets.
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '5'))
+
+        // Prevent two executions of this job from running concurrently.
+        disableConcurrentBuilds()
+
+        // Stop the pipeline if it exceeds 45 minutes.
+        timeout(time: 45, unit: 'MINUTES')
+    }
+
+    parameters {
+        // Keep false while you review the first Trivy reports; set true to block vulnerable images.
+        // Allow vulnerability enforcement to be enabled without editing the Jenkinsfile.
+        booleanParam(name: 'TRIVY_FAIL_ON_FINDINGS', defaultValue: false,
+                     description: 'Fail the build if fixable HIGH/CRITICAL vulnerabilities are found')
+    }
+
+    environment {
+        AWS_ACCOUNT_ID = '581237506066'
+        AWS_REGION = 'ap-south-1'
+        ECR_REPOSITORY = 'med-erp/order-service'
+        IMAGE_TAG = "${BUILD_NUMBER}"
+        ECR_REGISTRY = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+        IMAGE_URI = "${ECR_REGISTRY}/${ECR_REPOSITORY}:${BUILD_NUMBER}"
+
+        // Trivy: keep temp files on disk (not the 1.9 GB RAM-backed /tmp) and reuse the DB cache
+        // Configure temporary storage and persistent Trivy cache locations.
+        TMPDIR          = '/var/lib/jenkins/tmp'
+        TRIVY_CACHE_DIR = '/var/lib/jenkins/.cache/trivy'
+    }
+
+    stages{
+
+        stage("Checkout"){
+            steps{
+                sh '''
+                    java -version
+                    javac -version
+                    mvn -version
+                '''
+                echo "Checkout phase completed"
+            }
+        }
+
+        // stage('SonarQube Analysis') {
+        //     steps {
+        //         script {
+        //             def scannerHome = tool name: 'sonar-scanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
+        //             echo "SonarScanner installation path: ${scannerHome}"
+        //             dir('order-service') {
+        //                 withSonarQubeEnv('SonarQube') {
+        //                     sh """
+        //                         ${scannerHome}/bin/sonar-scanner \
+        //                         -Dsonar.projectKey=med-erp-order-service \
+        //                         -Dsonar.projectName=med-erp/order-service \
+        //                         -Dsonar.sources=src \
+        //                         -Dsonar.java.binaries=target/classes
+        //                     """
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+
+        // The previous standalone SonarScanner implementation is retained as a reference.
+        // The active pipeline uses the Maven SonarQube plugin below.
+        stage('SonarQube Analysis') {
+            steps {
+                dir('order-service') {
+                    withSonarQubeEnv('SonarQube') {
+                        sh '''
+                            mvn -B clean verify \
+                            org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+                            -Dsonar.projectKey=med-erp-order-service \
+                            -Dsonar.projectName=med-erp/order-service
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage("Quality Gate") {
+            steps {
+                // Do not wait indefinitely for the SonarQube quality result.
+                timeout(time: 5, unit: 'MINUTES') {
+                    script {
+                        // Requires the SonarQube Jenkins integration and webhook.
+                        def qg = waitForQualityGate()
+
+                        // Stop delivery when the quality gate is not successful.
+                        if (qg.status != 'OK') {
+                            error "Pipeline stopped: Quality Gate status: ${qg.status}"
+                        }
+
+                        echo "SonarQube Quality Gate passed"
+                    }
+                }
+            }
+        }
+
+        stage("Docker-Build"){
+            steps{
+                dir('order-service'){
+                    echo "Jenkins Build Number: ${BUILD_NUMBER}"
+                     sh "docker build -t ${IMAGE_URI} ."
+                }
+            }
+        }
+
+         stage('Trivy-Scan') {
+            steps {
+                script {
+                    // Exit code 1 blocks the build; exit code 0 reports findings without gating.
+                    def exitCode = params.TRIVY_FAIL_ON_FINDINGS ? '1' : '0'
+
+                    // Generate a full JSON vulnerability report before applying the gate.
+                    sh """
+                        mkdir -p trivy-reports
+ 
+                        # Full report, never fails the build
+                        trivy image --scanners vuln \
+                          --format json --output trivy-reports/trivy-report.json \
+                          "\${IMAGE_URI}"
+ 
+                        # Gate: fixable HIGH/CRITICAL findings (fails only if the parameter is true)
+                        # Optionally fail on HIGH/CRITICAL vulnerabilities with available fixes.
+                        trivy image --scanners vuln \
+                          --severity HIGH,CRITICAL --ignore-unfixed \
+                          --exit-code ${exitCode} \
+                          "\${IMAGE_URI}"
+                    """
+                }
+            }
+        }
+
+        stage("ECR-Login"){
+            steps{
+                sh '''
+                    aws ecr get-login-password --region ${AWS_REGION} | 
+                    docker login --username AWS --password-stdin ${ECR_REGISTRY}
+                '''
+            }
+        }
+
+        stage("Docker-Push"){
+            steps{
+                sh '''
+                    docker push "$IMAGE_URI"
+                '''
+            }
+        }
+
+        stage('Update Deployment Manifest') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'github-push-creds',
+                    usernameVariable: 'GIT_USERNAME',
+                    passwordVariable: 'GIT_TOKEN'
+                )]) {
+                    sh '''
+                        set -e
+
+                        git config user.name "Jenkins"
+                        git config user.email "jenkins@example.com"
+
+                        sed -i -E 's|^([[:space:]]*image:[[:space:]]*).*|\\1'"${IMAGE_URI}"'|' \
+                        k8s/deployments/order-service-deployment.yaml
+
+                        git add k8s/deployments/order-service-deployment.yaml
+
+                        if ! git diff --cached --quiet; then
+                            git commit -m "Update order-service image to ${BUILD_NUMBER}"
+                            git -c credential.helper='!f() { echo "username=${GIT_USERNAME}"; echo "password=${GIT_TOKEN}"; }; f' \
+                            push origin HEAD:master
+                        else
+                            echo "No deployment manifest changes to commit."
+                        fi
+                    '''
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            echo "🔄 Pipeline execution completed"
+
+            // Preserve the generated Trivy report as a Jenkins build artifact.
+            archiveArtifacts artifacts: 'trivy-reports/*', allowEmptyArchive: true
+ 
+            // Standard cleanup: leave no images, cache or workspace files behind
+            // Remove only this build's image and its Docker registry login.
+            sh '''
+                docker logout "$ECR_REGISTRY" || true
+                docker rmi -f "$IMAGE_URI" || true
+
+                # This command removes dangling images only.
+                docker image prune -f || true
+
+                # Removes build cache older than 48 hours; consider other jobs
+                # before enabling this on a shared Jenkins agent.
+                docker builder prune -f --filter "until=48h" || true
+            '''
+            // Remove checked-out source and generated workspace files.
+            cleanWs(deleteDirs: true, notFailBuild: true)
+        }
+
+        success {
+            echo "✅ Deployment successful"
+        }
+
+        failure {
+            echo "❌ Deployment failed"
+        }
+    }
+}
