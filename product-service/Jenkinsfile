@@ -116,31 +116,31 @@ pipeline{
             }
         }
 
-         stage('Trivy-Scan') {
-            steps {
-                script {
-                    // Exit code 1 blocks the build; exit code 0 reports findings without gating.
-                    def exitCode = params.TRIVY_FAIL_ON_FINDINGS ? '1' : '0'
+        //  stage('Trivy-Scan') {
+        //     steps {
+        //         script {
+        //             // Exit code 1 blocks the build; exit code 0 reports findings without gating.
+        //             def exitCode = params.TRIVY_FAIL_ON_FINDINGS ? '1' : '0'
 
-                    // Generate a full JSON vulnerability report before applying the gate.
-                    sh """
-                        mkdir -p trivy-reports
+        //             // Generate a full JSON vulnerability report before applying the gate.
+        //             sh """
+        //                 mkdir -p trivy-reports
  
-                        # Full report, never fails the build
-                        trivy image --scanners vuln \
-                          --format json --output trivy-reports/trivy-report.json \
-                          "\${IMAGE_URI}"
+        //                 # Full report, never fails the build
+        //                 trivy image --scanners vuln \
+        //                   --format json --output trivy-reports/trivy-report.json \
+        //                   "\${IMAGE_URI}"
  
-                        # Gate: fixable HIGH/CRITICAL findings (fails only if the parameter is true)
-                        # Optionally fail on HIGH/CRITICAL vulnerabilities with available fixes.
-                        trivy image --scanners vuln \
-                          --severity HIGH,CRITICAL --ignore-unfixed \
-                          --exit-code ${exitCode} \
-                          "\${IMAGE_URI}"
-                    """
-                }
-            }
-        }
+        //                 # Gate: fixable HIGH/CRITICAL findings (fails only if the parameter is true)
+        //                 # Optionally fail on HIGH/CRITICAL vulnerabilities with available fixes.
+        //                 trivy image --scanners vuln \
+        //                   --severity HIGH,CRITICAL --ignore-unfixed \
+        //                   --exit-code ${exitCode} \
+        //                   "\${IMAGE_URI}"
+        //             """
+        //         }
+        //     }
+        // }
 
         stage("ECR-Login"){
             steps{

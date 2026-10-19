@@ -13,9 +13,8 @@ RUN --mount=type=cache,target=/root/.m2 \
 
 # ─── Stage 2: Runtime ─────────────────────────────────────────────────────────
 FROM eclipse-temurin:17-jre-alpine AS runtime
-
-RUN apk upgrade --no-cache && \ 
-    addgroup -S appgroup && adduser -S appuser -G appgroup
+#apk upgrade --no-cache && \
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup 
 USER appuser
 
 WORKDIR /app
