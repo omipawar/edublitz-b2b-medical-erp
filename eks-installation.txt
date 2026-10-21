@@ -1,0 +1,35 @@
+1. Install AWS CLI
+
+bash
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o awscliv2.zip
+unzip awscliv2.zip
+sudo ./aws/install
+aws --version
+
+2. Install kubectl
+
+bash
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+kubectl version --client
+
+3. Install eksctl
+
+bash
+curl -sL "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_Linux_amd64.tar.gz" | tar xz -C /tmp
+sudo mv /tmp/eksctl /usr/local/bin
+eksctl version
+
+aws configure
+aws sts get-caller-identity
+
+eksctl create cluster \
+  --name med-erp \
+  --region ap-south-1 \
+  --nodegroup-name workers \
+  --node-type t3.medium \
+  --nodes 2 --nodes-min 2 --nodes-max 3 \
+  --managed \
+  --with-oidc
+
+kubectl get nodes
