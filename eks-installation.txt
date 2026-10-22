@@ -27,8 +27,8 @@ eksctl create cluster \
   --name med-erp \
   --region ap-south-1 \
   --nodegroup-name workers \
-  --node-type t3.medium \
-  --nodes 2 --nodes-min 2 --nodes-max 3 \
+  --node-type c7i-flex.large \
+  --nodes 2 --nodes-min 1 --nodes-max 2 \
   --managed \
   --with-oidc
 
