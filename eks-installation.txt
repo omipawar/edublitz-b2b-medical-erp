@@ -32,6 +32,8 @@ eksctl create cluster \
   --managed \
   --with-oidc
 
+aws eks update-kubeconfig
+
 kubectl get nodes
 
 eksctl delete cluster --name med-erp --region ap-south-1
