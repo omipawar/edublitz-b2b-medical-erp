@@ -1,0 +1,22 @@
+cat > argocd-application.yaml <<'EOF'
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: med-erp
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/omipawar/edublitz-b2b-medical-erp.git
+    targetRevision: master
+    path: k8s
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: med-erp
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+EOF
