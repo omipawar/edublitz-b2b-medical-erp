@@ -9,6 +9,8 @@ spec:
     repoURL: https://github.com/omipawar/edublitz-b2b-medical-erp.git
     targetRevision: master
     path: k8s
+    directory:
+      recurse: true
   destination:
     server: https://kubernetes.default.svc
     namespace: med-erp
