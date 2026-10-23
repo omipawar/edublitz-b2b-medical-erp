@@ -10,7 +10,7 @@ data:
   JWT_EXPIRATION: "86400000"
   JWT_REFRESH_EXPIRATION: "604800000"
   # CORS_ALLOWED_ORIGINS: "https://med-erp.yourdomain.com"
-  CORS_ALLOWED_ORIGINS: "*" #for initial testing
+  CORS_ALLOWED_ORIGINS: "http://omipawar097-erp-frontend.s3-website.ap-south-1.amazonaws.com" #for initial testing
   LOW_STOCK_THRESHOLD: "10"
 
   # Inter-service URLs (using Kubernetes ClusterIP service names)
